@@ -32,6 +32,8 @@ install.packages("dplyr")
 library(dplyr)
 install.packages("broom")
 library("broom")
+install.packages("tidyverse")
+library("tidyverse")
 ```
 
 # Part 1 - Smoking during pregnancy
@@ -122,24 +124,59 @@ The data are available in `parasites.csv` in your `data` folder.
 Let’s start by reading in the `parasites` data and examining the relationship between `divergence_time` and `parsim`.
 
 a.  Load the data and save the data frame as `parasites`.
+```{r}
+parasites <- read_csv("data/parasites.csv")
+```
+
 
 b.  Based on the goals of the analysis, what is the response variable?
+parsim because it measures the parasite similarity across species.
 
 c.  Visualize the relationship between the two variables.
+```{r}
+ggplot(parasites, aes(x = divergence_time, y = parsim)) +
+  geom_point() +
+  labs(
+    x = "Divergence Time (mil years)",
+    y = "Parasite Similarity",
+    title = "Parasite Similarty vs Divergence Time"
+  )
+```
+
 
 d.  Use the visualization to describe the relationship between the two variables.
+Parasite similarity increases as divergence time decreases. So as species become separated for longer, they diverge more.
 
 ## Question 4
 
 Next, model this relationship.
 
 a.  Fit the model and write the estimated regression equation.
-
+```{r}
+model <- lm(parsim ~ divergence_time, data = parasites)
+```
+$$
+\hat{parsim} = 0.379 + -0.007\cdot divergencetime
+$$
 b.  Interpret the slope and the intercept in the context of the data.
+Intercept indicates that species that have not diverged have roughly 0.379 proportion of parasites.
+Slope indicates for each additional million years since the species diverged, parasite similarity decreases by 0.007.
 
 c.  Recreate the visualization from Question 3, this time adding a regression line to the visualization.
+```{r}
+ggplot(parasites, aes(x = divergence_time, y = parsim)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(
+    x = "Divergence Time (mil years)",
+    y = "Parasite Similarity",
+    title = "Parasite Similarity vs Divergence Time (Regression)"
+  )
+```
+
 
 d.  What do you notice about the prediction (regression) line that may be strange, particularly for very large divergence times?
+As divergence time becomes greater, parasite similarity becomes negative. This is not possible biologically.
 
 ## Question 5
 
