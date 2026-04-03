@@ -2,6 +2,7 @@
 title: "Lab 5 - Modelling"
 categories: "Lab"
 author: "Aiden Mansfield"
+format: pdf
 ---
 
 # Introduction
@@ -26,12 +27,8 @@ Additionally, if you’re using functions that are not introduced in the course 
 Failure to cite outside resources used, including Large Language Models like Chat GPT, is a violation of the Duke Community Standard and will be treated as such.
 :::
 ```{r}
-install.packages("openintro")
-library(openintro)
 install.packages("dplyr")
 library(dplyr)
-install.packages("broom")
-library("broom")
 install.packages("tidyverse")
 library("tidyverse")
 ```
@@ -44,6 +41,7 @@ We are interested in the impact of smoking during pregnancy. Since it is not pos
 
 a.  Create a version of the `births14` data set dropping observations where there are `NA`s for `habit`. You can call this version `births14_habitgiven`.
 ```{r}
+library("openintro")
 data(births14)
 births14_habitgiven <- births14 %>%
   filter(!is.na(habit))
@@ -59,7 +57,7 @@ ggplot(births14_habitgiven, aes(x = habit, y = weight)) +
   labs(
     title = "Birth Weight by Smoking Habit",
     x = "Mother's Smoking Habit",
-    y = "Birth Weight (ounces)"
+    y = "Birth Weight (pounds)"
   )
 ```
 Babies born to non-smoking mothers tend to have higher birth weights. The median birth weight for babies born to smoking mothers is shifted downwards suggesting that there may be a negative association between smoking and infant birth weight.
@@ -67,12 +65,12 @@ Babies born to non-smoking mothers tend to have higher birth weights. The median
 c.  Now, fit a linear model that predicts `weight` from `habit`. Provide the tidy summary output below.
 ```{r}
 model <- lm(weight ~ habit, data = births14_habitgiven)
-tidy(model)
+summary(model)
 ```
 
 
 d.  Write the estimated least squares regression line below using proper notation.
-$$\hat{weight} = 7.2699 - 0.5927(\text{habitsmoker})$$
+$$\hat{weight (lbs)} = 7.2699 - 0.5927*(\text{habitsmoker})$$
     ::: callout-tip
     If you need to type an equation using proper notation, type your answers in-between `$$` and `$$`. You may use `\hat{example}` to put a hat on a character.
     :::
@@ -82,7 +80,7 @@ $$\hat{weight} = 7.2699 - 0.5927(\text{habitsmoker})$$
 a.  Another researcher is interested in assessing the relationship between babies’ weights and mothers’ ages. Fit another linear model to investigate this relationship. Provide the summary output below.
 ```{r}
 model_age <- lm(weight ~ mage, data = births14_habitgiven)
-tidy(model_age)
+summary(model_age)
 ```
 
 
@@ -130,7 +128,7 @@ parasites <- read_csv("data/parasites.csv")
 
 
 b.  Based on the goals of the analysis, what is the response variable?
-parsim because it measures the parasite similarity across species.
+parsim because it measures the proportion of parasite shared across species.
 
 c.  Visualize the relationship between the two variables.
 ```{r}
@@ -139,7 +137,7 @@ ggplot(parasites, aes(x = divergence_time, y = parsim)) +
   labs(
     x = "Divergence Time (mil years)",
     y = "Parasite Similarity",
-    title = "Parasite Similarty vs Divergence Time"
+    title = "Parasite Similarity vs Divergence Time"
   )
 ```
 
@@ -156,11 +154,11 @@ a.  Fit the model and write the estimated regression equation.
 model <- lm(parsim ~ divergence_time, data = parasites)
 ```
 $$
-\hat{parsim} = 0.379 + -0.007\cdot divergencetime
+\hat{parsim} = 0.379 -0.007* divergencetime
 $$
 b.  Interpret the slope and the intercept in the context of the data.
-Intercept indicates that species that have not diverged have roughly 0.379 proportion of parasites.
-Slope indicates for each additional million years since the species diverged, parasite similarity decreases by 0.007.
+Intercept indicates that species that have not diverged have roughly a 0.379 proportion of parasites.
+Slope indicates that for each additional million years since the species diverged, parasite similarity decreases by 0.007.
 
 c.  Recreate the visualization from Question 3, this time adding a regression line to the visualization.
 ```{r}
@@ -210,7 +208,7 @@ ggplot(parasites, aes(x = divergence_time, y = transformed_parsim)) +
 
 c.  Write a 1-2 sentence description of what you observe in the visualization.
 
-More distantly related species are less likely to share parasites. For each additional million years of divergence, the log odds of parasite similarity decreases by the slope.
+More distantly related species tend to share parasites. For each additional million years of divergence, the log odds of parasite similarity decreases by the slope.
 
 ## Question 6
 
@@ -253,6 +251,8 @@ You can calculate $R^2$ using the glance function. For example, you can calculat
 
 a.  Calculate and report $R^2$ for each model fit in the previous exercise.
 ```{r}
+library("broom")
+
 r2_dt <- glance(dt_model)$r.squared
 r2_dist <- glance(dist_model)$r.squared
 r2_BM <- glance(BM_model)$r.squared
@@ -312,7 +312,7 @@ ggplot(gapminder_07, aes(x = gdpPercap, y = lifeExp)) +
   labs(
     x = "GDP per Capital (USD)",
     y = "Life Expectancy (years)",
-    title = "Life Expectancy vs GDP per Capital (2007)"
+    title = "Life Expectancy vs GDP per Capita (2007)"
   )
 
 ggplot(gapminder_07, aes(x = gdpPercap_log, y = lifeExp))+ geom_point() +
@@ -325,7 +325,7 @@ ggplot(gapminder_07, aes(x = gdpPercap_log, y = lifeExp))+ geom_point() +
 
 
     First describe the relationship between each pair of the variables. Then, comment on which relationship would be better modeled using a linear model, and explain your reasoning.
-In the first scatter plot, the relationship is mostly non linear (steep rise then plateau). In the second scatter plot, the relationship is more gradual and closer to linear. The second relationship (log) would be better modeled using a linear model. This is because it removes the curvature, making increases in life expectancy more constant for each proportional increase in GDP.
+In the first scatter plot, the relationship is strongly non linear (steep rise then plateau). In the second scatter plot, the relationship is more gradual and closer to linear. The second relationship (log) would be better modeled using a linear model. This is because it reduces the curvature, making increases in life expectancy more constant for each proportional increase in GDP.
 
 c.  **Model fitting:**
 
@@ -358,14 +358,15 @@ Next, we want to examine if the relationship between GDP and life expectancy tha
 a.  **Justification:** Create a scatter plot of `gdpPercap_log` vs. `lifeExp`, where the points are colored by `continent`. Do you think the trend between `gdpPercap_log` and `lifeExp` is different for different continents? Justify your answer with specific features of the plot.
 
 ```{r}
-ggplot(gapminder_07, aes(x = gdpPercap_log, y = lifeExp, color = continent)) + geom_point(size = 3, alpha = 0.7) +
+ggplot(gapminder_07, aes(x = gdpPercap_log, y = lifeExp, 
+color = continent)) + geom_point(size = 3, alpha = 0.7) +
   labs(
     x = "Log of GDP per Capita",
     y = "Life Expectancy (years)",
     title = "Life Expectancy vs Log of GDP per Capita by Continent (2007)"
   )
 ```
- Yes, there appears to be different trends that vary by continent. As per this scatter plot, Africa experiences lower life expectancy, while other continents are clustered higher, experiencing longer life expectancy.
+ Yes, there appears to be different trends that vary by continent. As per this scatter plot, Africa experiences lower life expectancy, Asia is more spread out, while other continents are clustered higher, experiencing longer life expectancy.
 
 b.  **Model fitting and interpretation:**
 
@@ -387,7 +388,7 @@ This model predicts that a GDP per capital of roughly $24.65 occurs if an Africa
     -   Interpret the *slope* of the model, making sure that your interpretation is in the units of the original data (not on log scale).
 
 (e^0.0781 - 1) * 100 = 8.12
-For every added year of life expectancy, GDP per capital is expected to increasy by roughly 8.12%
+For every added year of life expectancy, GDP per capita is expected to increase by roughly 8.12%
 
 c.  **Prediction:** Predict the GDP of a country in Asia where the average life expectancy is 70 years old.
 
@@ -420,6 +421,8 @@ Then, write a paragraph (4-5 sentences) addressing the following:
 -   What are your general take-aways from this presentation?
 
 -   What are your general take-aways from how this presentation was given?
+
+I enjoyed this presentation because of its visual demonstration of worldwide data from over hundreds of years in such a short period and Rosling's enthusiasm also making it more of a narrative and engaging experience. For me, it was interesting to see how world wars or epidemics would cause a sudden break in the trend, showing many countries experiencing a decrease in life expectancy. At times the animation moves quickly and many bubbles overlap which can make it hard to follow a specific country. I think there's a few general take-aways from this presentation: all countries are progressing towards health and wealth but at different rates, countries in the same continent often cluster together, and the role time can play in a dynamic dataset like this one. My general take-away from this presentation is Rosling's ability to make a dataset engaging and easy to understand by general audiences because he is very enthusiast about the topic, adds an occasional joke, and paces the demonstration to keep viewers engaged.
 
 # Wrap-up
 
