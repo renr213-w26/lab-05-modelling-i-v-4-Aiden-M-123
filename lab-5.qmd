@@ -288,23 +288,68 @@ Gapminder is a “fact tank” that uses publicly available world data to produc
 
 a.  **Data:** For our analysis, we will only be working with data from 2007. Below, filter the data set so only values from the year 2007 are shown. Save this data set as `gapminder_07` and use it for the remainder of this exercise and the following.
 
+```{r}
+install.packages("gapminder")
+library(gapminder)
+
+gapminder_07 <- gapminder %>%
+  filter(year == 2007)
+```
+
+
 b.  **Visualization:** We are interested in learning more about GDP, and we’ll start with exploring the relationship between life expectancy and GDP. Create two visualizations:
 
     -   Scatter plot of `gdpPercap` vs. `lifeExp`.
 
     -   Scatter plot of `gdpPercap_log` vs. `lifeExp`, where `gdpPercap_log` is a new variable you add to the data set by taking the natural log of `gdpPercap`.
+    
+```{r}
+gapminder_07 <- gapminder_07 %>%
+  mutate(gdpPercap_log = log(gdpPercap))
+
+ggplot(gapminder_07, aes(x = gdpPercap, y = lifeExp)) +
+  geom_point() +
+  labs(
+    x = "GDP per Capital (USD)",
+    y = "Life Expectancy (years)",
+    title = "Life Expectancy vs GDP per Capital (2007)"
+  )
+
+ggplot(gapminder_07, aes(x = gdpPercap_log, y = lifeExp))+ geom_point() +
+  labs(
+    x = "Log of GDP per Capita",
+    y = "Life Expectancy (years)",
+    title = "Life Expectancy vs Log of GDP per Capita (2007)"
+  )
+```
+
 
     First describe the relationship between each pair of the variables. Then, comment on which relationship would be better modeled using a linear model, and explain your reasoning.
+In the first scatter plot, the relationship is mostly non linear (steep rise then plateau). In the second scatter plot, the relationship is more gradual and closer to linear. The second relationship (log) would be better modeled using a linear model. This is because it removes the curvature, making increases in life expectancy more constant for each proportional increase in GDP.
 
 c.  **Model fitting:**
 
     -   Fit a linear model predicting log gross domestic product from life expectancy. Display the tidy summary.
 
+```{r}
+gdp_model <- lm(gdpPercap_log ~ lifeExp, data = gapminder_07)
+tidy(gdp_model)
+```
+
+
 d.  **Model evaluation:**
 
     -   Calculate the R-squared of the model using two methods and confirm that the values match: first method is using `glance()` and the other method is based on the value of the correlation coefficient between the two variables.
 
+```{r}
+r2_glance <- glance(gdp_model)$r.squared
+r2_glance
+```
+
+
     -   Interpret R-squared in the context of the data and the research question.
+    
+About 65.4% of the variation in log GDP per capita can be explained by differences in life expectancy.
 
 ## Question 9
 
@@ -312,15 +357,53 @@ Next, we want to examine if the relationship between GDP and life expectancy tha
 
 a.  **Justification:** Create a scatter plot of `gdpPercap_log` vs. `lifeExp`, where the points are colored by `continent`. Do you think the trend between `gdpPercap_log` and `lifeExp` is different for different continents? Justify your answer with specific features of the plot.
 
+```{r}
+ggplot(gapminder_07, aes(x = gdpPercap_log, y = lifeExp, color = continent)) + geom_point(size = 3, alpha = 0.7) +
+  labs(
+    x = "Log of GDP per Capita",
+    y = "Life Expectancy (years)",
+    title = "Life Expectancy vs Log of GDP per Capita by Continent (2007)"
+  )
+```
+ Yes, there appears to be different trends that vary by continent. As per this scatter plot, Africa experiences lower life expectancy, while other continents are clustered higher, experiencing longer life expectancy.
+
 b.  **Model fitting and interpretation:**
 
     -   Regardless of your answer in part (a), fit an [additive model]{.underline} (main effects) that predicts `gdpPercap_log` from life expectancy and continent (with Africas as the baseline level). Display a tidy summary of the model output.
+    
+```{r}
+gapminder_07$continent <- relevel(gapminder_07$continent, ref = "Africa")
+
+gdp_cont_model <- lm(gdpPercap_log ~ lifeExp + continent, data = gapminder_07)
+tidy(gdp_cont_model)
+```
+
 
     -   Interpret the *intercept* of the model, making sure that your interpretation is in the units of the original data (not on log scale).
+    
+e^3.2048 = 24.65
+This model predicts that a GDP per capital of roughly $24.65 occurs if an African country has a life expectancy of 0 years.
 
     -   Interpret the *slope* of the model, making sure that your interpretation is in the units of the original data (not on log scale).
 
+(e^0.0781 - 1) * 100 = 8.12
+For every added year of life expectancy, GDP per capital is expected to increasy by roughly 8.12%
+
 c.  **Prediction:** Predict the GDP of a country in Asia where the average life expectancy is 70 years old.
+
+```{r}
+new_country <- data.frame(
+  lifeExp = 70,
+  continent = "Asia"
+)
+
+log_gdp_pred <- predict(gdp_cont_model, newdata = new_country)
+log_gdp_pred
+
+gdp_pred <- exp(log_gdp_pred)
+gdp_pred
+```
+Asian country with a life expectancy of 70 years is predicted to have a GDP per capita of roughly $5906.74
 
 ## Question 10
 
